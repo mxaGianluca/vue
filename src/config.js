@@ -1,3 +1,4 @@
+// {% raw %}
 module.exports = {
 
   /**
@@ -102,3 +103,4 @@ Object.defineProperty(module.exports, 'unsafeDelimiters', {
     textParser.compileRegex()
   }
 })
+// {% endraw %}
