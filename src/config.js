@@ -1,4 +1,3 @@
-// {% raw %}
 module.exports = {
 
   /**
@@ -80,9 +79,11 @@ module.exports = {
  * @type {Array<String>}
  */
 
+//@preserve {% raw %}
 var delimiters = ['{{', '}}']
 var unsafeDelimiters = ['{{{', '}}}']
 var textParser = require('./parsers/text')
+//@preserve {% endraw %}
 
 Object.defineProperty(module.exports, 'delimiters', {
   get: function () {
@@ -103,4 +104,3 @@ Object.defineProperty(module.exports, 'unsafeDelimiters', {
     textParser.compileRegex()
   }
 })
-// {% endraw %}
