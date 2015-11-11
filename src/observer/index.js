@@ -1,4 +1,5 @@
 var _ = require('../util')
+var config = require('../config')
 var Dep = require('./dep')
 var arrayMethods = require('./array')
 var arrayKeys = Object.getOwnPropertyNames(arrayMethods)
@@ -47,7 +48,7 @@ Observer.create = function (value, vm) {
   }
   var ob
   if (
-    value.hasOwnProperty('__ob__') &&
+    Object.prototype.hasOwnProperty.call(value, '__ob__') &&
     value.__ob__ instanceof Observer
   ) {
     ob = value.__ob__
@@ -172,28 +173,48 @@ function copyAugment (target, src, keys) {
 
 function defineReactive (obj, key, val) {
   var dep = new Dep()
+
+  // cater for pre-defined getter/setters
+  var getter, setter
+  if (config.convertAllProperties) {
+    var property = Object.getOwnPropertyDescriptor(obj, key)
+    if (property && property.configurable === false) {
+      return
+    }
+    getter = property && property.get
+    setter = property && property.set
+  }
+
   var childOb = Observer.create(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
-    get: function metaGetter () {
+    get: function reactiveGetter () {
+      var value = getter ? getter.call(obj) : val
       if (Dep.target) {
         dep.depend()
         if (childOb) {
           childOb.dep.depend()
         }
-        if (_.isArray(val)) {
-          for (var e, i = 0, l = val.length; i < l; i++) {
-            e = val[i]
+        if (_.isArray(value)) {
+          for (var e, i = 0, l = value.length; i < l; i++) {
+            e = value[i]
             e && e.__ob__ && e.__ob__.dep.depend()
           }
         }
       }
-      return val
+      return value
     },
-    set: function metaSetter (newVal) {
-      if (newVal === val) return
-      val = newVal
+    set: function reactiveSetter (newVal) {
+      var value = getter ? getter.call(obj) : val
+      if (newVal === value) {
+        return
+      }
+      if (setter) {
+        setter.call(obj, newVal)
+      } else {
+        val = newVal
+      }
       childOb = Observer.create(newVal)
       dep.notify()
     }
